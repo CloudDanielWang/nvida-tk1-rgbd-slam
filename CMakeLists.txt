@@ -16,6 +16,10 @@ include_directories( "/usr/include/eigen3" )
 # OpenCV
 FIND_PACKAGE( OpenCV REQUIRED )
 include_directories( ${OpenCV_INCLUDE_DIRS} )
+#OpenNI
+#FIND_PACKAGE( OpenNI REQUIRED )
+#include_directories( ${OpenNI_INCLUDE_DIRS} )
+include_directories( "/usr/include/ni" )
 # Sophus 
 find_package( Sophus REQUIRED )
 include_directories( ${Sophus_INCLUDE_DIRS} )
@@ -26,6 +30,7 @@ include_directories( ${G2O_INCLUDE_DIRS} )
 
 set( THIRD_PARTY_LIBS 
     ${OpenCV_LIBS}
+    #${OpenNI_LIBS}
     ${Sophus_LIBRARIES}
     g2o_core g2o_stuff g2o_types_sba
 )

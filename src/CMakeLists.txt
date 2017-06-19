@@ -10,6 +10,7 @@ add_library(front_end
     visual_odometry.cpp
     converter.cpp
     data.cpp
+    openni.cpp
 )
 
 target_link_libraries( front_end

@@ -5,6 +5,7 @@
 #include "acrbslam/visual_odometry.h"
 #include "acrbslam/wifi.h"
 #include "acrbslam/data.h"
+#include <acrbslam/openni.h>
 
 namespace acrbslam
 {
@@ -79,19 +80,31 @@ void* vo_thread(void *arg)
 
 
     //openni 输入
-    VideoCapture capture(CV_CAP_OPENNI);    //设置视频的来源为OPENNI设备，即Kinect
+    COpenNI openni;                                                     //设置视频的来源为OPENNI设备，即Kinect
+    if(!openni.Initial())
+         exit(1) ;    
 
+    if(!openni.Start())
+         exit(1) ;
 
        for ( int i=0; i<vo->scan_frame_num_ ; i++ )       //循环次数取决与参数文件中的数值
     {
                
         cout<<"****** loop "<<i<<" ******"<<endl;
-        //需要切换为OPENNI设备时，将下面部分注释取消
-        capture.grab();  
+               
+        if(!openni.UpdateData()) {
+             exit(1) ;
+        }
+        /*获取并显示色彩图像*/
+        Mat color_image_src(openni.image_metadata.YRes(), openni.image_metadata.XRes(),
+                                        CV_8UC3, (char *)openni.image_metadata.Data());
         Mat color;
-        Mat depth ;
-        capture.retrieve( color, CV_CAP_OPENNI_BGR_IMAGE );        //数据的读取可以做多线程加队列进行优化，加快运行速度（目前未优化）
-        capture.retrieve( depth, CV_CAP_OPENNI_DEPTH_MAP ); 
+        cvtColor(color_image_src, color, CV_RGB2BGR);
+
+        Mat depth_image_src(openni.depth_metadata.YRes(), openni.depth_metadata.XRes(),
+                            CV_16UC1, (char *)openni.depth_metadata.Data());//因为kinect获取到的深度图像实际上是无符号的16位数据
+        Mat depth;
+        depth_image_src.convertTo(depth, CV_8U, 255.0/8000);
         //OPENNI END
 
 
