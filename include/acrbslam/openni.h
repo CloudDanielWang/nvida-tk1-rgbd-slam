@@ -17,7 +17,7 @@ public:
 
 private:
     //该函数返回真代表出现了错误，返回假代表正确
-    bool CheckError(const char* error) ;
+    bool CheckError(const char* error);
 
 private:
     XnStatus    status;

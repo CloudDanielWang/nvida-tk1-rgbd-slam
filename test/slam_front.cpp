@@ -5,7 +5,7 @@
 #include "acrbslam/visual_odometry.h"
 #include "acrbslam/wifi.h"
 #include "acrbslam/data.h"
-#include <acrbslam/openni.h>
+#include "acrbslam/openni.h"
 
 namespace acrbslam
 {
@@ -75,15 +75,16 @@ namespace acrbslam
 
 void* vo_thread(void *arg)
 {
-    acrbslam::VisualOdometry::Ptr vo ( new acrbslam::VisualOdometry );
-    acrbslam::Camera::Ptr camera ( new acrbslam::Camera );
+    VisualOdometry::Ptr vo ( new acrbslam::VisualOdometry );
+    Camera::Ptr camera ( new acrbslam::Camera );
 
 
     //openni 输入
     COpenNI openni;                                                     //设置视频的来源为OPENNI设备，即Kinect
+    //cout<<"Begin ti get data From OpenNI"<<endl;
     if(!openni.Initial())
          exit(1) ;    
-
+	
     if(!openni.Start())
          exit(1) ;
 
@@ -93,22 +94,36 @@ void* vo_thread(void *arg)
         cout<<"****** loop "<<i<<" ******"<<endl;
                
         if(!openni.UpdateData()) {
-             exit(1) ;
+             //exit(1) ;
         }
         /*获取并显示色彩图像*/
+        //Method 1 segment fault
+        /*
         Mat color_image_src(openni.image_metadata.YRes(), openni.image_metadata.XRes(),
                                         CV_8UC3, (char *)openni.image_metadata.Data());
         Mat color;
-        cvtColor(color_image_src, color, CV_RGB2BGR);
+        cvtColor(color_image_src, color, CV_RGB2BGR,3);
+
 
         Mat depth_image_src(openni.depth_metadata.YRes(), openni.depth_metadata.XRes(),
                             CV_16UC1, (char *)openni.depth_metadata.Data());//因为kinect获取到的深度图像实际上是无符号的16位数据
         Mat depth;
-        depth_image_src.convertTo(depth, CV_8U, 255.0/8000);
-        //OPENNI END
+        depth_image_src.convertTo(depth, CV_8U, 255.0/8000,0);
+        */
+        
+        //Method 2 
+        Mat color,depth;
+        Mat temp_color, temp_depth;
+        memcpy(temp_color.data, openni.image_metadata.Data(), 640*480*3);
+        cvtColor(temp_color, color, CV_RGB2BGR);
+        
+        memcpy(temp_depth.data, openni.depth_metadata.Data(), 640*480*2);
+        //cvConvertScale(depth,depth,255/4096.0);
+        temp_depth.convertTo(depth, CV_8U, 255.0/4096,0);
+        //OPENNI END	
 
-
-        acrbslam::Frame::Ptr pFrame = acrbslam::Frame::createFrame();
+		
+        Frame::Ptr pFrame = Frame::createFrame();
         pFrame->camera_ = camera;
         pFrame->color_ = color;
         pFrame->depth_ = depth;
@@ -140,7 +155,7 @@ void* vo_thread(void *arg)
 
         cout<<"VO costs time: "<<timer.elapsed() <<endl;
 
-        if ( vo->state_ == acrbslam::VisualOdometry::LOST )
+        if ( vo->state_ == VisualOdometry::LOST )
             break;
     }
     //return;    //如何关闭线程？？

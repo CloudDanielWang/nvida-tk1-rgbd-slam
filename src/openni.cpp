@@ -16,13 +16,23 @@ namespace acrbslam
             return false;
         }
         context.SetGlobalMirror(true);//设置镜像
+        
+        //set map mode
+        XnMapOutputMode mapMode;
+        mapMode.nXRes=640;
+        mapMode.nYRes=480;
+        mapMode.nFPS=30;
+        
+        
         //产生图片node
         status = image_generator.Create(context);
+        status = image_generator.SetMapOutputMode(mapMode);
         if(CheckError("Create image generator  error!")) {
             return false;
         }
         //产生深度node
         status = depth_generator.Create(context);
+        status = depth_generator.SetMapOutputMode(mapMode);
         if(CheckError("Create depth generator  error!")) {
             return false;
         }
@@ -45,14 +55,14 @@ namespace acrbslam
     }
 
     bool COpenNI::UpdateData() {
-        status = context.WaitNoneUpdateAll();
+        status = context.WaitAnyUpdateAll();
         if(CheckError("Update date error!")) {
             return false;
         }
         //获取数据
         image_generator.GetMetaData(image_metadata);
         depth_generator.GetMetaData(depth_metadata);
-
+		cout<<"Got the data"<<endl;
         return true;
     }
 

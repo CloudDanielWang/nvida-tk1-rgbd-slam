@@ -17,9 +17,9 @@ include_directories( "/usr/include/eigen3" )
 FIND_PACKAGE( OpenCV REQUIRED )
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 #OpenNI
-#FIND_PACKAGE( OpenNI REQUIRED )
-#include_directories( ${OpenNI_INCLUDE_DIRS} )
-include_directories( "/usr/include/ni" )
+set(OpenNI_INCLUDE_DIRS "/usr/include/ni")
+set(OpenNI_LIBS "/usr/lib/libOpenNI.so")
+include_directories( ${OpenNI_INCLUDE_DIRS} )
 # Sophus 
 find_package( Sophus REQUIRED )
 include_directories( ${Sophus_INCLUDE_DIRS} )
@@ -27,10 +27,13 @@ include_directories( ${Sophus_INCLUDE_DIRS} )
 find_package( G2O REQUIRED )
 include_directories( ${G2O_INCLUDE_DIRS} )
 
+#LINK_DIRECTORIES( /usr/local/cuda-6.5/targets/armv7-linux-gnueabihf/lib)
+#LINK_DIRECTORIES( /usr/lib/arm-linux-gnueabihf)
+#LINK_DIRECTORIES( /usr/lib/libOpenNI.so)
 
 set( THIRD_PARTY_LIBS 
     ${OpenCV_LIBS}
-    #${OpenNI_LIBS}
+    ${OpenNI_LIBS}
     ${Sophus_LIBRARIES}
     g2o_core g2o_stuff g2o_types_sba
 )

@@ -21,6 +21,14 @@ using Sophus::SE3;
 using cv::Mat;
 using namespace cv;
 
+//for OpenNi
+#include <XnOpenNI.h>
+#include <XnLog.h>
+#include <XnFPSCalculator.h>
+#include <XnCppWrapper.h>
+using namespace xn;
+
+
 
 // std 
 #include <vector>

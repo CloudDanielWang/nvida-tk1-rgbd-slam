@@ -26,8 +26,8 @@ VisualOdometry::VisualOdometry() :
 
    scan_frame_num_  =Config::get<int>("scan_frame_num");
 
-    orb_ = cv::ORB::create ( num_of_features_, scale_factor_, level_pyramid_ );
-    //cv::ORB orb_( num_of_features_, scale_factor_, level_pyramid_ );
+    //orb_ = cv::ORB::create ( num_of_features_, scale_factor_, level_pyramid_ );
+    cv::ORB orb_( num_of_features_, scale_factor_, level_pyramid_ );
 }
 
 VisualOdometry::~VisualOdometry()
