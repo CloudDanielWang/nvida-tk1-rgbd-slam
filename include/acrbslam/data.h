@@ -15,7 +15,8 @@ public:
 
 	int frameID;
 
-	int End_Flag;//结束标志位
+	uchar End_Flag;//结束标志位
+	int Empty_Flag;//data Empty_Flag
 
 	Mat CameraImage;	
 	Mat Depth;

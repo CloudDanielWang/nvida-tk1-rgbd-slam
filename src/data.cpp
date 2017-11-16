@@ -10,8 +10,8 @@ Data::Data()
 	Mat Depth=Mat::zeros(480,640,CV_16UC1);
 	Mat T_c_w_mat=Mat::zeros(4,4,CV_32F);		
 
-	//uchar End_Flag=0;
-	int End_Flag=0;
+	uchar End_Flag='0';
+	int Empty_Flag=0;
 }
 
 Data::~Data()
@@ -37,6 +37,7 @@ void Data::inputData(Frame::Ptr frame)
 Data Data::empty()
 {	
 	Data data;
+	data.Empty_Flag=1;
 	return data;
 }
 

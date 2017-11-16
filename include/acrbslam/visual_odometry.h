@@ -25,7 +25,7 @@ public:
     Frame::Ptr  curr_;      // current frame 
     
     //cv::Ptr<cv::ORB> orb_;  // orb detector and computer 
-	ORB orb_;  // orb detector and computer 
+    ORB orb_;  			// change for opencv 2.4
     vector<cv::KeyPoint>    keypoints_curr_;    // keypoints in current frame
     Mat                     descriptors_curr_;  // descriptor in current frame 
     

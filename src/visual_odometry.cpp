@@ -27,8 +27,8 @@ VisualOdometry::VisualOdometry() :
    scan_frame_num_  =Config::get<int>("scan_frame_num");
 
     //orb_ = cv::ORB::create ( num_of_features_, scale_factor_, level_pyramid_ );	//opencv3.0+
-    //cv::ORB orb_( num_of_features_, scale_factor_, level_pyramid_ );	//opencv2.4
-	//ORB orb_;
+    //cv::ORB orb_( num_of_features_, scale_factor_, level_pyramid_ );	//opencv2.4 can't load ORB config
+
 }
 
 VisualOdometry::~VisualOdometry()
@@ -39,9 +39,6 @@ VisualOdometry::~VisualOdometry()
 //bool VisualOdometry::addFrame ( Frame::Ptr frame)
 Data VisualOdometry::addFrame ( Frame::Ptr frame, Data data)
 {
-    //
-    //Data data;
-    //
 
     switch ( state_ )
     {
@@ -49,12 +46,11 @@ Data VisualOdometry::addFrame ( Frame::Ptr frame, Data data)
     {
         state_ = OK;
         curr_ = ref_ = frame;
-        // extract features from first frame and add them into map
-        extractKeyPoints();
-        //computeDescriptors();
+        extractKeyPoints();//extract features from first frame and add them into map
+        //computeDescriptors();	//opencv 2.4 can't use this function
         addKeyFrame();      // the first frame is a key-frame
         data.inputData(frame);// 初始化时第一帧记为关键帧
-	cout<<"vo_initializing_end"<<endl;
+	//cout<<"vo_initializing_end"<<endl;
         break;
     }
     case OK:
@@ -62,7 +58,7 @@ Data VisualOdometry::addFrame ( Frame::Ptr frame, Data data)
         curr_ = frame;
         curr_->T_c_w_ = ref_->T_c_w_;
         extractKeyPoints();
-        //computeDescriptors();		//change for opencv2.4
+        //computeDescriptors();		//opencv 2.4 can't use this function
         featureMatching();
         poseEstimationPnP();
         if ( checkEstimatedPose() == true ) // a good estimation
@@ -79,6 +75,7 @@ Data VisualOdometry::addFrame ( Frame::Ptr frame, Data data)
         else // bad estimation due to various reasons
         {
             num_lost_++;
+		cout<<"num lost"<<num_lost_<<endl;
             if ( num_lost_ > max_num_lost_ )
             {
                 state_ = LOST;
@@ -103,11 +100,7 @@ Data VisualOdometry::addFrame ( Frame::Ptr frame, Data data)
 void VisualOdometry::extractKeyPoints()                     //ORB检测特征点
 {
     boost::timer timer;
-    //orb_->detect ( curr_->color_, keypoints_curr_ );
-	//Mat color_temp=curr_->color_.clone();
-	//Mat descriptors_temp=descriptors_curr_.clone();
-	//vector<cv::KeyPoint>    keypoints_temp=keypoints_curr_;
-    	//orb_(color_temp, Mat(), keypoints_curr_, descriptors_temp );//change for opencv 2.4   
+        //orb_->detect ( curr_->color_, keypoints_curr_ );  
 	orb_(curr_->color_, Mat(), keypoints_curr_, descriptors_curr_ );
    
                     
@@ -141,17 +134,17 @@ void VisualOdometry::featureMatching()                              //ORB求特�
         }
     }
     
-    matcher_flann_.match ( desp_map, descriptors_curr_, matches );             // matcher_flann_是什么？
+    matcher_flann_.match ( desp_map, descriptors_curr_, matches );            // matcher_flann_是什么？
     // select the best matches
-    float min_dis = std::min_element (
-                        matches.begin(), matches.end(),
-                        [] ( const cv::DMatch& m1, const cv::DMatch& m2 )
-    {
-        return m1.distance < m2.distance;
-    } )->distance;                                                  //这个求最小值的方法好牛逼
 
+    float min_dis = std::min_element (matches.begin(), matches.end(),
+                        [] ( const cv::DMatch& m1, const cv::DMatch& m2 )
+    			{
+        			return m1.distance < m2.distance;
+    			} 	
+		)->distance;                                      //这个求最小值的方法好牛逼
     match_3dpts_.clear();                               //存放匹配点的3维位置坐标
-    match_2dkp_index_.clear();                      //存放特征点的像素坐标
+    match_2dkp_index_.clear();                      	//存放特征点的像素坐标
     for ( cv::DMatch& m : matches )
     {
         if ( m.distance < max<float> ( min_dis*match_ratio_, 30.0 ) )
@@ -239,13 +232,13 @@ void VisualOdometry::poseEstimationPnP()
         pose->estimate().translation()
     );
         
-    Eigen::Isometry3d transfomation = pose->estimate(); 
-    Eigen::Matrix3d rotation_estimate = transfomation.rotation();
-    Eigen::Vector3d translation_estimate=transfomation.translation();
+    //Eigen::Isometry3d transfomation = pose->estimate(); 
+    //Eigen::Matrix3d rotation_estimate = transfomation.rotation();
+    //Eigen::Vector3d translation_estimate=transfomation.translation();
 
     
-    cout<<"rotation_estimate:\n "<<rotation_estimate.eulerAngles(2,0,1)*180/3.141592653<<endl;     //roll pitch raw
-    cout<<"translation_estimate:\n "<<translation_estimate<<endl;
+    //cout<<"rotation_estimate:\n "<<rotation_estimate.eulerAngles(2,0,1)*180/3.141592653<<endl;     //roll pitch raw
+    //cout<<"translation_estimate:\n "<<translation_estimate<<endl;
 
 
     //cout<<"T_c_w_estimated_: "<<endl<<T_c_w_estimated_.matrix()<<endl;

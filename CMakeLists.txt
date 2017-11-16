@@ -27,8 +27,8 @@ include_directories( ${Sophus_INCLUDE_DIRS} )
 find_package( G2O REQUIRED )
 include_directories( ${G2O_INCLUDE_DIRS} )
 
-#LINK_DIRECTORIES( /usr/local/cuda-6.5/targets/armv7-linux-gnueabihf/lib)
-#LINK_DIRECTORIES( /usr/lib/arm-linux-gnueabihf)
+LINK_DIRECTORIES( /usr/local/cuda-6.5/targets/armv7-linux-gnueabihf/lib)
+LINK_DIRECTORIES( /usr/lib/arm-linux-gnueabihf)
 #LINK_DIRECTORIES( /usr/lib/libOpenNI.so)
 
 set( THIRD_PARTY_LIBS 

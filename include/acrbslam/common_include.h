@@ -41,7 +41,6 @@ using namespace xn;
 
 ///
 #include <stdio.h>      /*标准输入输出定义*/
-#include <iostream>
 #include <unistd.h>     /*Unix 标准函数定义*/
 #include <sys/types.h> 
 #include <sys/stat.h>  
@@ -69,6 +68,7 @@ using namespace xn;
 #include "stddef.h"
 #include <malloc.h>
 #include <semaphore.h> 
+#include <algorithm>
 ///
 
 

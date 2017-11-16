@@ -22,9 +22,7 @@ using cv::Mat;
 using namespace cv;
 
 //for OpenNi
-#include <XnOpenNI.h>
-#include <XnLog.h>
-#include <XnFPSCalculator.h>
+
 #include <XnCppWrapper.h>
 using namespace xn;
 
@@ -71,6 +69,7 @@ using namespace xn;
 #include "stddef.h"
 #include <malloc.h>
 #include <semaphore.h> 
+#include <algorithm>
 ///
 
 

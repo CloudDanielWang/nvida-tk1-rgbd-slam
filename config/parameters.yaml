@@ -17,7 +17,7 @@ number_of_features: 500
 scale_factor: 1.2
 level_pyramid: 4
 match_ratio: 2.0
-max_num_lost: 10
+max_num_lost: 20
 min_inliers: 30
 keyframe_rotation: 0.1
 keyframe_translation: 0.1
@@ -28,5 +28,5 @@ scan_frame_num: 200
 #WIFI Parameters
 SERVER_PORT: 6000
 CLIENT_PORT: 7000
-SERVER_IP: "192.168.0.132"
-CLIENT_IP: "127.0.0.1"
+SERVER_IP: "192.168.1.102"
+CLIENT_IP: "192.168.1.103"
