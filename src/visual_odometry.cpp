@@ -26,8 +26,9 @@ VisualOdometry::VisualOdometry() :
 
    scan_frame_num_  =Config::get<int>("scan_frame_num");
 
-    //orb_ = cv::ORB::create ( num_of_features_, scale_factor_, level_pyramid_ );
-    cv::ORB orb_( num_of_features_, scale_factor_, level_pyramid_ );
+    //orb_ = cv::ORB::create ( num_of_features_, scale_factor_, level_pyramid_ );	//opencv3.0+
+    //cv::ORB orb_( num_of_features_, scale_factor_, level_pyramid_ );	//opencv2.4
+	//ORB orb_;
 }
 
 VisualOdometry::~VisualOdometry()
@@ -36,10 +37,10 @@ VisualOdometry::~VisualOdometry()
 }
 
 //bool VisualOdometry::addFrame ( Frame::Ptr frame)
-Data VisualOdometry::addFrame ( Frame::Ptr frame)
+Data VisualOdometry::addFrame ( Frame::Ptr frame, Data data)
 {
     //
-    Data data;
+    //Data data;
     //
 
     switch ( state_ )
@@ -50,9 +51,10 @@ Data VisualOdometry::addFrame ( Frame::Ptr frame)
         curr_ = ref_ = frame;
         // extract features from first frame and add them into map
         extractKeyPoints();
-        computeDescriptors();
+        //computeDescriptors();
         addKeyFrame();      // the first frame is a key-frame
         data.inputData(frame);// 初始化时第一帧记为关键帧
+	cout<<"vo_initializing_end"<<endl;
         break;
     }
     case OK:
@@ -60,7 +62,7 @@ Data VisualOdometry::addFrame ( Frame::Ptr frame)
         curr_ = frame;
         curr_->T_c_w_ = ref_->T_c_w_;
         extractKeyPoints();
-        computeDescriptors();
+        //computeDescriptors();		//change for opencv2.4
         featureMatching();
         poseEstimationPnP();
         if ( checkEstimatedPose() == true ) // a good estimation
@@ -82,7 +84,8 @@ Data VisualOdometry::addFrame ( Frame::Ptr frame)
                 state_ = LOST;
             }
             //return false;     //本身返回错误
-            return data.empty();        //修改为返回初始data值，需要修改此部分！！！！可能需要在data类中添加错误返回函数
+            	cout<<"vo_addframe_false"<<endl;
+		return data.empty();        //修改为返回初始data值，需要修改此部分！！！！可能需要在data类中添加错误返回函数
         }
         break;
     }
@@ -100,17 +103,24 @@ Data VisualOdometry::addFrame ( Frame::Ptr frame)
 void VisualOdometry::extractKeyPoints()                     //ORB检测特征点
 {
     boost::timer timer;
-    orb_->detect ( curr_->color_, keypoints_curr_ );                            
+    //orb_->detect ( curr_->color_, keypoints_curr_ );
+	//Mat color_temp=curr_->color_.clone();
+	//Mat descriptors_temp=descriptors_curr_.clone();
+	//vector<cv::KeyPoint>    keypoints_temp=keypoints_curr_;
+    	//orb_(color_temp, Mat(), keypoints_curr_, descriptors_temp );//change for opencv 2.4   
+	orb_(curr_->color_, Mat(), keypoints_curr_, descriptors_curr_ );
+   
+                    
     cout<<"extract keypoints cost time: "<<timer.elapsed() <<endl;
 }
-
+/*
 void VisualOdometry::computeDescriptors()               //ORB求特征点描述子
 {
     boost::timer timer;
     orb_->compute ( curr_->color_, keypoints_curr_, descriptors_curr_ );        
     cout<<"descriptor computation cost time: "<<timer.elapsed() <<endl;
 }
-
+*/
 void VisualOdometry::featureMatching()                              //ORB求特征点匹配
 {
     boost::timer timer;
@@ -229,13 +239,13 @@ void VisualOdometry::poseEstimationPnP()
         pose->estimate().translation()
     );
         
-    //Eigen::Isometry3d transfomation = pose->estimate(); 
-    //Eigen::Matrix3d rotation_estimate = transfomation.rotation();
-    //Eigen::Vector3d translation_estimate=transfomation.translation();
+    Eigen::Isometry3d transfomation = pose->estimate(); 
+    Eigen::Matrix3d rotation_estimate = transfomation.rotation();
+    Eigen::Vector3d translation_estimate=transfomation.translation();
 
     
-     //cout<<"rotation_estimate:\n "<<rotation_estimate.eulerAngles(2,0,1)*180/3.141592653<<endl;     //roll pitch raw
-     //cout<<"translation_estimate:\n "<<translation_estimate<<endl;
+    cout<<"rotation_estimate:\n "<<rotation_estimate.eulerAngles(2,0,1)*180/3.141592653<<endl;     //roll pitch raw
+    cout<<"translation_estimate:\n "<<translation_estimate<<endl;
 
 
     //cout<<"T_c_w_estimated_: "<<endl<<T_c_w_estimated_.matrix()<<endl;

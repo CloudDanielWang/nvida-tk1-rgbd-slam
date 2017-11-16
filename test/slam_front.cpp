@@ -9,7 +9,7 @@
 
 namespace acrbslam
 {
-    acrbslam::Data data;    //数据存储类 
+    Data data;    //数据存储类 
 
     void* vo_thread(void *arg);
     void* wifi_thread(void *arg);
@@ -44,24 +44,22 @@ int main ( int argc, char** argv )
     int ret_vo=pthread_create(&thread_vo,NULL,acrbslam::vo_thread,NULL);
     if(ret_vo !=0)
     {
-        perror("VO Thread Create  Failed");
+        perror("VO Thread Create Failed");
         exit(EXIT_FAILURE);
     }
-
-    /*int ret_wifi=pthread_create(&thread_wifi,NULL, acrbslam::wifi_thread, NULL);
+/*
+    int ret_wifi=pthread_create(&thread_wifi,NULL, acrbslam::wifi_thread, NULL);
     if(ret_wifi !=0)
     {
         perror("WIFI Thread Create  Failed");
         exit(EXIT_FAILURE);
     }
-	*/
+*/
     while(1);
     
     pthread_join(thread_vo,&retval_vo);
     pthread_join(thread_wifi,&retval_wifi);
 
-
-      
 
     return 0;
 }
@@ -81,12 +79,19 @@ void* vo_thread(void *arg)
 
     //openni 输入
     COpenNI openni;                                                     //设置视频的来源为OPENNI设备，即Kinect
-    //cout<<"Begin ti get data From OpenNI"<<endl;
+    //cout<<"Begin to get data From OpenNI"<<endl;
     if(!openni.Initial())
-         exit(1) ;    
+	{	
+		cout<<"openni Initial faild"<<endl;		
+		exit(1) ; 
+	}
+            
 	
     if(!openni.Start())
-         exit(1) ;
+        {	
+		cout<<"openni start faild"<<endl;		
+		exit(1) ; 
+	}
 
        for ( int i=0; i<vo->scan_frame_num_ ; i++ )       //循环次数取决与参数文件中的数值
     {
@@ -94,9 +99,11 @@ void* vo_thread(void *arg)
         cout<<"****** loop "<<i<<" ******"<<endl;
                
         if(!openni.UpdateData()) {
-             //exit(1) ;
+             exit(1) ;
         }
         /*获取并显示色彩图像*/
+
+
         //Method 1 segment fault
         /*
         Mat color_image_src(openni.image_metadata.YRes(), openni.image_metadata.XRes(),
@@ -111,32 +118,62 @@ void* vo_thread(void *arg)
         depth_image_src.convertTo(depth, CV_8U, 255.0/8000,0);
         */
         
-        //Method 2 
+
+/*       //Method 2 
         Mat color,depth;
         Mat temp_color, temp_depth;
-        memcpy(temp_color.data, openni.image_metadata.Data(), 640*480*3);
+
+        memcpy(temp_color.data, openni.image_metadata.Data(), 640*480*3);	cout<<"memcpy rgb"<<endl;//there leads faild
         cvtColor(temp_color, color, CV_RGB2BGR);
         
-        memcpy(temp_depth.data, openni.depth_metadata.Data(), 640*480*2);
+        memcpy(depth.data, openni.depth_metadata.Data(), 640*480*2);
         //cvConvertScale(depth,depth,255/4096.0);
-        temp_depth.convertTo(depth, CV_8U, 255.0/4096,0);
+        //temp_depth.convertTo(depth, CV_8U, 255.0/4096,0);
+*/
+
+
+	//Method 3
+	Mat cColorImg( openni.image_metadata.FullYRes(),openni.image_metadata.FullXRes(),CV_8UC3, (void*)openni.image_metadata.Data());
+	//convert from RGB to BGR
+	cv::Mat color;
+	cvtColor( cColorImg, color, CV_RGB2BGR );
+	//imshow("Camera Image", color);
+	//waitKey(0);
+
+	//convert to OpenCV form
+	cv::Mat depth( openni.depth_metadata.FullYRes(),openni.depth_metadata.FullXRes(),
+                         CV_16UC1, (void*)openni.depth_metadata.Data());
+	//imshow("Depth Image", depth);
+	//waitKey(0);
+
+	
+	//cout<<"OPENNI END"<<endl;
         //OPENNI END	
 
-		
+
+
+
+/*******************************************************************************/
+	
         Frame::Ptr pFrame = Frame::createFrame();
         pFrame->camera_ = camera;
         pFrame->color_ = color;
         pFrame->depth_ = depth;
         
+	ORB orb_;
+		Mat a,b;
+	vector<cv::KeyPoint> key;
+	orb_(a,Mat(),key,b); 
+
 
         boost::timer timer;
-        pthread_mutex_lock( &mutex_data );      //对data互斥锁住
-
-        data=vo->addFrame(pFrame);
-        
+        //pthread_mutex_lock( &mutex_data );      //对data互斥锁住
+	//cout<<"before addframe"<<endl;
+        data=vo->addFrame(pFrame,data);
+      
         //
-        imshow("Camera Image", color);
-        waitKey(1);
+        //imshow("Camera Image", color);
+        //waitKey(1);
         //
         data.frameID=i;
         int data_empty_flag=data.CameraImage.empty();
@@ -144,7 +181,7 @@ void* vo_thread(void *arg)
         //if(i==vo->scan_frame_num_-1 ) {data.End_Flag=1;}
         //cout<<"VO END flag"<<data.End_Flag<<endl;
 
-        pthread_mutex_unlock( &mutex_data);     //对data解锁
+        //pthread_mutex_unlock( &mutex_data);     //对data解锁
 
 
         if(data_empty_flag==0)

@@ -24,7 +24,8 @@ public:
     Frame::Ptr  ref_;       // reference key-frame 
     Frame::Ptr  curr_;      // current frame 
     
-    cv::Ptr<cv::ORB> orb_;  // orb detector and computer 
+    //cv::Ptr<cv::ORB> orb_;  // orb detector and computer 
+	ORB orb_;  // orb detector and computer 
     vector<cv::KeyPoint>    keypoints_curr_;    // keypoints in current frame
     Mat                     descriptors_curr_;  // descriptor in current frame 
     
@@ -38,7 +39,8 @@ public:
     
     // parameters 
     int num_of_features_;   // number of features
-    double scale_factor_;   // scale in image pyramid
+    //double scale_factor_;   // scale in image pyramid
+    float scale_factor_;   // change for opencv 2.4
     int level_pyramid_;     // number of pyramid levels
     float match_ratio_;     // ratio for selecting  good matches
     int max_num_lost_;      // max number of continuous lost times
@@ -54,7 +56,7 @@ public: // functions
     ~VisualOdometry();
     
     //bool addFrame( Frame::Ptr frame);      // add a new frame 
-    Data addFrame(Frame::Ptr frame);
+    Data addFrame ( Frame::Ptr frame, Data data);
     
 protected:  
     // inner operation 
