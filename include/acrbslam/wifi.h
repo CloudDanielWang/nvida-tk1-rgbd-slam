@@ -6,6 +6,7 @@
 #include "acrbslam/config.h"
 #include "acrbslam/frame.h"
 #include "acrbslam/converter.h"
+#include "acrbslam/data.h"
 
 
 namespace acrbslam
@@ -43,19 +44,32 @@ class wifi_comu:public Frame, public Converter			//继承了frame类
 
 
 	public:
+		Data ReceiveTCPDataServer( Data data);
+		void SendTCPDataClient(Data data);
+
+
+
+/****************************************************************************************/
+//以下为旧的测试函数
+		
 		//void send_data(char *data, unsigned int num);		//WiFi发送数据函数
-		void send_data_new(Mat frame);			//WIFI 发送测试
+		//void send_data_new(Mat frame);			//WIFI 发送测试
 		//int  receive_data(char *data, long unsigned int num);		//WiFi接受数据函数
-		Mat  receive_data_pc(Mat frame);			//wifi pc 接受新函数
-
-		int receive_data_server_readv(Mat *RGBframe_, Mat *Depthframe_, Mat *Transformation_);
-		int  receive_data_server_readv(Mat *RGBframe_, Mat *Depthframe_, Mat *Transformation_, uchar *End_Flag);
-		int  receive_data_server_readv(Mat *RGBframe_, Mat *Depthframe_, Mat *Transformation_, int *End_Flag);
+		//Mat  receive_data_pc(Mat frame);			//wifi pc 接受新函数
 
 
-		void send_data_client_writev(Mat RGBframe, Mat Depthframe,  Mat Transformation );
-		void send_data_client_writev(Mat RGBframe, Mat Depthframe,  Mat Transformation, uchar End_Flag);
-		void send_data_client_writev(Mat RGBframe, Mat Depthframe,  Mat Transformation, int End_Flag);
+		//void SendTCPDataClient(uchar* TCPData, int TCPDataSize);
+
+		//int receive_data_server_readv(Mat *RGBframe_, Mat *Depthframe_, Mat *Transformation_);
+		//int  receive_data_server_readv(Mat *RGBframe_, Mat *Depthframe_, Mat *Transformation_, uchar *End_Flag);
+		//int  receive_data_server_readv(Mat *RGBframe_, Mat *Depthframe_, Mat *Transformation_, int *End_Flag);
+
+
+		//void send_data_client_writev(Mat RGBframe, Mat Depthframe,  Mat Transformation );
+		//void send_data_client_writev(Mat RGBframe, Mat Depthframe,  Mat Transformation, uchar End_Flag);
+		//void send_data_client_writev(Mat RGBframe, Mat Depthframe,  Mat Transformation, int End_Flag);
+
+
 
 
 

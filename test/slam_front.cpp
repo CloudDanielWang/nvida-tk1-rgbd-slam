@@ -9,14 +9,16 @@
 
 namespace acrbslam
 {
-    Data data;    //数据存储类 
+    acrbslam::Data data;    //数据存储类 
 
     void* vo_thread(void *arg);
     void* wifi_thread(void *arg);
+
+
 }   //namespace acrbslam 
    
     pthread_mutex_t mutex_data; //互斥锁
-    sem_t sem_TCP_send;
+	sem_t sem_TCP;
 
 
 
@@ -35,21 +37,23 @@ int main ( int argc, char** argv )
         perror("Mutex initialization failed");
         exit(EXIT_FAILURE);
     }
-/*
-    if ((sem_init(&sem_TCP_send,0,0))==-1)
-    {
-        perror("semaphore TCP SEND initialization failed");
-        exit(EXIT_FAILURE);
-    }
-*/
+        
+	//初始化TCP信号量，其初值为0  
+        if((sem_init(&sem_TCP, 0, 0)) == -1)  
+        {  
+        perror("semaphore of TCP intitialization failed\n");  
+        exit(EXIT_FAILURE);  
+        } 
+
     pthread_t   thread_wifi;        void *retval_wifi;
     pthread_t   thread_vo;          void *retval_vo;
+
 
 
     int ret_vo=pthread_create(&thread_vo,NULL,acrbslam::vo_thread,NULL);
     if(ret_vo !=0)
     {
-        perror("VO Thread Create Failed");
+        perror("VO Thread Create  Failed");
         exit(EXIT_FAILURE);
     }
 
@@ -65,6 +69,7 @@ int main ( int argc, char** argv )
     pthread_join(thread_vo,&retval_vo);
     pthread_join(thread_wifi,&retval_wifi);
 
+      
 
     return 0;
 }
@@ -166,13 +171,9 @@ void* vo_thread(void *arg)
         pFrame->depth_ = depth;
         
 	ORB orb_;
-		Mat a,b;
-	vector<cv::KeyPoint> key;
-	orb_(a,Mat(),key,b); 
-
 
         boost::timer timer;
-        //pthread_mutex_lock( &mutex_data );      //对data互斥锁住
+        pthread_mutex_lock( &mutex_data );      //对data互斥锁住
 	//cout<<"before addframe"<<endl;
         data=vo->addFrame(pFrame,data);
       
@@ -182,11 +183,12 @@ void* vo_thread(void *arg)
         //
         data.frameID=i;
         int data_empty_flag=data.CameraImage.empty();
-        data.End_Flag=0;
-        if(i==vo->scan_frame_num_-1 ) {data.End_Flag=1;}
+        data.End_Flag='0';
+        if(i==vo->scan_frame_num_-1 ) {data.End_Flag='1';}
         //cout<<"VO END flag"<<data.End_Flag<<endl;
 
-        //pthread_mutex_unlock( &mutex_data);     //对data解锁
+        pthread_mutex_unlock( &mutex_data);     //对data解锁
+	sem_post(&sem_TCP);
 
 
         if(data_empty_flag==0)
@@ -194,56 +196,63 @@ void* vo_thread(void *arg)
             cout<<"This Frame is Not The KeyFrame!!!"<<endl;
         }
 
-	//sem_post(&sem_TCP_send);
+
         cout<<"VO costs time: "<<timer.elapsed() <<endl;
 
         if ( vo->state_ == VisualOdometry::LOST )
             break;
+	if(data.End_Flag=='1') break;
     }
     //return;    //如何关闭线程？？
- 	exit(1);
+	cout<<"VO Thread Exit"<<endl;
+    	exit(1);
+
 
 }
 
 
 void* wifi_thread(void *arg)
-{ 
+{   
     wifi_comu wifi_comu_;
     wifi_comu_.wifi_init_uav();
     usleep(100);
 
     while(1)
     {    
-        
-        //pthread_mutex_lock(&mutex_data);        //对data互斥线程锁，以避免在对data判断期间VO线程的干扰
-	//sem_wait(&sem_TCP_send);
+        sem_wait(&sem_TCP); 
+        pthread_mutex_lock(&mutex_data);        //对data互斥线程锁，以避免在对data判断期间VO线程的干扰
         int flag=data.CameraImage.empty();
         if(flag==0)
          {  
-        //Eigen::Matrix4d translation=data.toMatrix4d(data.T_c_w_mat);
-        //cout<<"translation"<<translation<<endl;
-       // cout<<"wifi send data begin"<<endl;
-        //wifi_comu_.send_data_client_writev(data.CameraImage, data.Depth, data.T_c_w_mat);
-        wifi_comu_.send_data_client_writev(data.CameraImage, data.Depth, data.T_c_w_mat, data.End_Flag);
-	//wifi_comu_.send_data_new(data.CameraImage);
-        //cout<<"wifi send data finish"<<endl;
-        cout<<"frameID:"<<data.frameID<<endl;
-        cout<<"data.End_Flag:"<<data.End_Flag<<endl;
-        if(data.End_Flag==1) break;
+            data.RGBImgSize = data.CameraImage.total()*data.CameraImage.elemSize();     
+            data.DepthImgSize =data.Depth.total()*data.Depth.elemSize();        
+            data.TransMatrixSize =data.T_c_w_mat.total()*data.T_c_w_mat.elemSize();     
+            data.EndFlagSize = sizeof(data.End_Flag);  
+                      
+            data.TCPSendDataSize=data.RGBImgSize+data.DepthImgSize+data.TransMatrixSize+data.EndFlagSize;                                
 
-        //cv::imshow("wifi_send thread frame",data.CameraImage);
-        //cv::waitKey(1);
-       
+            wifi_comu_.SendTCPDataClient(data);
+            /*******************************************************************************/
+            //cout<<"frameID:\t"<<data.frameID<<endl;
+            //cout<<"End_Flag:\t"<<data.End_Flag<<endl;
+            //cout<<"TCW\n"<<data.T_c_w.matrix()<<endl;
+	if(data.End_Flag=='1') break;
+
+		// cv::imshow("wifi_send thread frame",data.CameraImage);
+		//cv::waitKey(1);
+      
          }//endif 
-        //pthread_mutex_unlock(&mutex_data);      //互斥锁解锁
-
+        pthread_mutex_unlock(&mutex_data);      //互斥锁解锁
+        if(data.End_Flag=='1') break;
         usleep(100);
+        //sleep(1);
         
     }
     //return;
-        //pthread_mutex_unlock(&mutex_data);      //线程结束后，将互斥锁解锁，便于VO_thread end;
-	cout<<"wifi send thread end"<<endl;
-    exit(1);
+        //pthread_mutex_unlock(&mutex_data);      //线程结束后，将互斥锁解锁，便于WiFi的最后一次发送
+	close(wifi_comu_.client_sock);
+	cout<<"Close the WiFi Thread"<<endl;
+    	exit(1);
 }
 
 
