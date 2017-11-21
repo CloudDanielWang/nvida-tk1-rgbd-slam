@@ -4,7 +4,7 @@ namespace acrbslam
 {
 
 Data::Data()
-:frameID(0)
+:frameID(0),RGBImgSize(921600),DepthImgSize(614400),TransMatrixSize(64),EndFlagSize(1),TCPSendDataSize(1536065)
 {
 	Mat CameraImage=Mat::zeros(480,640,CV_8UC3);	
 	Mat Depth=Mat::zeros(480,640,CV_16UC1);
@@ -12,19 +12,17 @@ Data::Data()
 
 	uchar End_Flag='0';
 	//int End_Flag=0;
-	int RGBImgSize = CameraImage.total()*CameraImage.elemSize();	//cout<<"RGBImgSize\t"<<RGBImgSize<<endl;
-	int DepthImgSize =Depth.total()*Depth.elemSize();			//cout<<"DepthImgSize\t"<<DepthImgSize<<endl;
-	int TransMatrixSize =T_c_w_mat.total()*T_c_w_mat.elemSize();		//cout<<"TransMatrixSize\t"<<TransMatrixSize<<endl;
-	int EndFlagSize = sizeof(End_Flag);					//cout<<"EndFlagSize\t"<<EndFlagSize<<endl;
+	//int RGBImgSize = CameraImage.total()*CameraImage.elemSize();	cout<<"RGBImgSize\t"<<RGBImgSize<<endl;
+	//int DepthImgSize =Depth.total()*Depth.elemSize();			cout<<"DepthImgSize\t"<<DepthImgSize<<endl;
+	//int TransMatrixSize =T_c_w_mat.total()*T_c_w_mat.elemSize();		cout<<"TransMatrixSize\t"<<TransMatrixSize<<endl;
+	//int EndFlagSize = sizeof(End_Flag);					cout<<"EndFlagSize\t"<<EndFlagSize<<endl;
 	
-	uchar TCPRGB[ RGBImgSize ];
-	uchar TCPDepth[DepthImgSize];
-	uchar TCPTransMatirx[TransMatrixSize];
+	//uchar TCPRGB[ RGBImgSize ];
+	//uchar TCPDepth[DepthImgSize];
+	//uchar TCPTransMatirx[TransMatrixSize];
 	
-
-	int TCPSendDataSize=RGBImgSize+DepthImgSize;//+TransMatrixSize+EndFlagSize;
-										//cout<<"TCPSendDataSize\t"<<TCPSendDataSize<<endl;
-	uchar TCPSendData[TCPSendDataSize];					//cout<<"unchar TCPSendDataSize\t"<<sizeof(TCPSendData)<<endl;
+	//int TCPSendDataSize=RGBImgSize+DepthImgSize+TransMatrixSize+EndFlagSize;	//cout<<"TCPSendDataSize\t"<<TCPSendDataSize<<endl;
+	//uchar TCPSendData[TCPSendDataSize];					//cout<<"unchar TCPSendDataSize\t"<<sizeof(TCPSendData)<<endl;
 }	
 
 Data::~Data()
@@ -50,6 +48,13 @@ void Data::inputData(Frame::Ptr frame)
 
 }	
 
+void Data::SE32Eigen()
+{
+	//EigenTransfomation = T_c_w.matrix(); 
+	EigenRotationEstimate = T_c_w.rotation_matrix();
+	EigenTranslationEstimate=T_c_w.translation();
+
+}
 
 
 Data Data::empty()
