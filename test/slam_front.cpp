@@ -205,7 +205,7 @@ void* vo_thread(void *arg)
     }
     //return;    //如何关闭线程？？
 	cout<<"VO Thread Exit"<<endl;
-    	exit(1);
+    	//exit(1);
 
 
 }
@@ -224,12 +224,12 @@ void* wifi_thread(void *arg)
         int flag=data.CameraImage.empty();
         if(flag==0)
          {  
-            data.RGBImgSize = data.CameraImage.total()*data.CameraImage.elemSize();     
-            data.DepthImgSize =data.Depth.total()*data.Depth.elemSize();        
-            data.TransMatrixSize =data.T_c_w_mat.total()*data.T_c_w_mat.elemSize();     
-            data.EndFlagSize = sizeof(data.End_Flag);  
+            //data.RGBImgSize = data.CameraImage.total()*data.CameraImage.elemSize();     
+            //data.DepthImgSize =data.Depth.total()*data.Depth.elemSize();        
+            //data.TransMatrixSize =data.T_c_w_mat.total()*data.T_c_w_mat.elemSize();     
+            //data.EndFlagSize = sizeof(data.End_Flag);  
                       
-            data.TCPSendDataSize=data.RGBImgSize+data.DepthImgSize+data.TransMatrixSize+data.EndFlagSize;                                
+            //data.TCPSendDataSize=data.RGBImgSize+data.DepthImgSize+data.TransMatrixSize+data.EndFlagSize;                                
 
             wifi_comu_.SendTCPDataClient(data);
             /*******************************************************************************/
